@@ -40,17 +40,13 @@ systemctl enable --force greetd.service
 ## 7. Setup dei file di configurazione utente (Skel)
 mkdir -p /etc/skel/.config/systemd/user/graphical-session.target.wants
 ln -s /usr/lib/systemd/user/dms.service /etc/skel/.config/systemd/user/graphical-session.target.wants/
-
-# Copia la configurazione di niri passata dal contesto di build se presente
 mkdir -p /etc/skel/.config/niri/
-if [ -f /ctx/dot_config/niri/config.kdl ]; then
-    cp -rf /ctx/dot_config/niri/config.kdl /etc/skel/.config/niri/
-fi
+cp -rf /ctx/dot_config/niri/config.kdl /etc/skel/.config/niri/
 
 ## 8. Servizi di sistema e pulizia componenti
 systemctl enable podman.socket
 
-dnf -y remove waybar || true
+dnf -y remove waybar
 
 # Rigenerazione degli schemi glib
 glib-compile-schemas /usr/share/glib-2.0/schemas/
