@@ -15,38 +15,38 @@ dnf -y install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-
 dnf -y install ffmpeg x264-libs libva-utils --allowerasing
 
 ## 4. Installazione di Niri Window Manager
-dnf -y install niri bibata-cursor-theme
+#dnf -y install niri bibata-cursor-theme
 
 ## 5. Installazione di DMS-Greeter & Greetd (Tramite COPR)
-curl --output-dir "/etc/yum.repos.d/" \
-  --remote-name "https://copr.fedorainfracloud.org/coprs/avengemedia/dms/repo/fedora-$(rpm -E %fedora)/avengemedia-dms-fedora-$(rpm -E %fedora).repo"
-dnf -y install quickshell dms greetd dms-greeter --allowerasing 
+#curl --output-dir "/etc/yum.repos.d/" \
+#  --remote-name "https://copr.fedorainfracloud.org/coprs/avengemedia/dms/repo/fedora-$(rpm -E %fedora)/avengemedia-dms-fedora-$(rpm -E %fedora).repo"
+#dnf -y install quickshell dms greetd dms-greeter --allowerasing 
 
 ## 6. Configurazione di Greetd come Display Manager predefinito (Sostituisce SDDM)
-mkdir -p /etc/greetd/
-cat > /etc/greetd/config.toml << EOF
-[terminal]
-vt = 1
-[default_session]
-user = "greeter"
-command = "dms-greeter --command niri"
-EOF
+#mkdir -p /etc/greetd/
+#cat > /etc/greetd/config.toml << EOF
+#[terminal]
+#vt = 1
+#[default_session]
+#user = "greeter"
+#command = "dms-greeter --command niri"
+#EOF
 
 # Forziamo il cambio del display manager disattivando SDDM a favore di Greetd
-rm -f /etc/systemd/system/display-manager.service
-ln -s /usr/lib/systemd/system/greetd.service /etc/systemd/system/display-manager.service
-systemctl enable --force greetd.service
+#rm -f /etc/systemd/system/display-manager.service
+#ln -s /usr/lib/systemd/system/greetd.service /etc/systemd/system/display-manager.service
+#systemctl enable --force greetd.service
 
 ## 7. Setup dei file di configurazione utente (Skel)
-mkdir -p /etc/skel/.config/systemd/user/graphical-session.target.wants
-ln -s /usr/lib/systemd/user/dms.service /etc/skel/.config/systemd/user/graphical-session.target.wants/
-mkdir -p /etc/skel/.config/niri/
-cp -rf /ctx/dot_config/niri/config.kdl /etc/skel/.config/niri/
+#mkdir -p /etc/skel/.config/systemd/user/graphical-session.target.wants
+#ln -s /usr/lib/systemd/user/dms.service /etc/skel/.config/systemd/user/graphical-session.target.wants/
+#mkdir -p /etc/skel/.config/niri/
+#cp -rf /ctx/dot_config/niri/config.kdl /etc/skel/.config/niri/
 
 ## 8. Servizi di sistema e pulizia componenti
 systemctl enable podman.socket
 
-dnf -y remove waybar
+#dnf -y remove waybar
 
 # Rigenerazione degli schemi glib
 glib-compile-schemas /usr/share/glib-2.0/schemas/
