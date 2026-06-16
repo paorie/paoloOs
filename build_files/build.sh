@@ -2,56 +2,68 @@
 
 set -ouex pipefail
 
-## 1. DNF5 Speedup
+## DNF5 Speedup
 sed -i '/^\[main\]/a max_parallel_downloads=10' /etc/dnf/dnf.conf
 
-## 2. System apps, Virtualization & udisks2
-# Inserito udisks2 tra i pacchetti nativi di sistema
-dnf -y install libvirt virt-manager qemu-kvm flatpak-builder wlr-randr iotop sysstat lxqt-openssh-askpass lxpolkit parallel just seahorse udisks2
+## System apps
+dnf -y install libvirt virt-manager qemu-kvm flatpak-builder wlr-randr iotop sysstat lxqt-openssh-askpass lxpolkit parallel just seahorse
 
-## 3. Terminale agnostico (utile su Niri) & codec multimediali
-dnf -y install kitty
-#dnf -y install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
-#dnf -y install ffmpeg x264-libs libva-utils --allowerasing
+# User apps
+dnf -y install kitty mpv
 
-## 4. Installazione di Niri Window Manager
-#dnf -y install niri bibata-cursor-theme
+# fully-featured ffmpeg with nonfree components from rpm fusion
+dnf -y install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+dnf -y install ffmpeg x264-libs libva-utils --allowerasing
 
-## 5. Installazione di DMS-Greeter & Greetd (Tramite COPR)
-#curl --output-dir "/etc/yum.repos.d/" \
-#  --remote-name "https://copr.fedorainfracloud.org/coprs/avengemedia/dms/repo/fedora-$(rpm -E %fedora)/avengemedia-dms-fedora-$(rpm -E %fedora).repo"
-#dnf -y install quickshell dms greetd dms-greeter --allowerasing 
+# Install Niri 
+dnf -y install niri bibata-cursor-theme
 
-## 6. Configurazione di Greetd come Display Manager predefinito (Sostituisce SDDM)
-#mkdir -p /etc/greetd/
-#cat > /etc/greetd/config.toml << EOF
-#[terminal]
-#vt = 1
-#[default_session]
-#user = "greeter"
-#command = "dms-greeter --command niri"
-#EOF
+# # Install Noctalia shell
+# curl -fsSL https://github.com/terrapkg/subatomic-repos/raw/main/terra.repo -o /etc/yum.repos.d/terra.repo
+# dnf -y install terra-release
+# dnf -y install noctalia-shell 
+# # ABILITARE LE NOTIFICHE: systemctl --user enable --now swaync.service
 
-# Forziamo il cambio del display manager disattivando SDDM a favore di Greetd
-#rm -f /etc/systemd/system/display-manager.service
-#ln -s /usr/lib/systemd/system/greetd.service /etc/systemd/system/display-manager.service
-#systemctl enable --force greetd.service
+# Install Dank Linux shell
+sudo curl --output-dir "/etc/yum.repos.d/" \
+  --remote-name "https://copr.fedorainfracloud.org/coprs/avengemedia/dms/repo/fedora-$(rpm -E %fedora)/avengemedia-dms-fedora-$(rpm -E %fedora).repo"
+dnf -y install quickshell dms greetd dms-greeter --allowerasing 
+#
+# Install greetd login manager with dank configuration (still needs some work)
+mkdir -p /etc/greetd/
+cat > /etc/greetd/config.toml << EOF
+[terminal]
+vt = 1
+[default_session]
+user = "greeter"
+command = "dms-greeter --command niri"
+EOF
+rm -f /etc/systemd/system/display-manager.service
+ln -s /usr/lib/systemd/system/greetd.service /etc/systemd/system/display-manager.service
+systemctl enable --force greetd.service
 
-## 7. Setup dei file di configurazione utente (Skel)
-#mkdir -p /etc/skel/.config/systemd/user/graphical-session.target.wants
-#ln -s /usr/lib/systemd/user/dms.service /etc/skel/.config/systemd/user/graphical-session.target.wants/
-#mkdir -p /etc/skel/.config/niri/
-#cp -rf /ctx/dot_config/niri/config.kdl /etc/skel/.config/niri/
+mkdir -p /etc/skel/.config/systemd/user/graphical-session.target.wants
+ln -s /usr/lib/systemd/user/dms.service /etc/skel/.config/systemd/user/graphical-session.target.wants/
+mkdir -p /etc/skel/.config/niri/
+cp -rf /ctx/dot_config/niri/config.kdl /etc/skel/.config/niri/
 
-## 8. Servizi di sistema e pulizia componenti
+# DEV packages
+# cargo evtest git input-remapper libevdev-devel libinput-utils python3-devel
+
+# dnf -y install bitwarden-cli 
+
+#### Enable podman
+
 systemctl enable podman.socket
 
-#dnf -y remove waybar
+# Remove waybar
+dnf -y remove waybar
 
-# Rigenerazione degli schemi glib
+# this is needed for some glib applications
 glib-compile-schemas /usr/share/glib-2.0/schemas/
 
-## 9. CLEAN UP
+## CLEAN UP
+# Clean up dnf cache to reduce image size
 dnf5 -y clean all
 rm -rf /run/dnf /run/selinux-policy
 rm -rf /var/lib/dnf
